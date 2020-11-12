@@ -1,0 +1,36 @@
+'use strict'
+var functions = require('firebase-functions');
+var admin = require('firebase-admin');
+admin.initializeApp(functions.config().firbase);
+
+exports.SendToOwnerNotificationOnEmergencyTwo = functions.database.ref('/ClientOrders/{Orderid}').onWrite(async (change, context) => {
+    const newData = change.after.val();
+    var  message = {
+            notification: {
+            title: "Emergency",
+            body: "Tire brand: " + newData.brand + "\n" + "Tire size: " + newData.size
+        },
+        token: newData.token,
+        data:{
+            "Brand": newData.brand+"",
+            "Size": newData.size+"",
+            "Name": newData.user_Name+"",
+            "Phone": newData.phone+"",
+            "Longitude": newData.user_Longitude+"",
+            "Latitude": newData.user_Latitude+"",
+            "User_token": newData.user_token+"",
+        }  
+    };            
+    return admin.messaging().send(message);
+});
+exports.SendToUserNotificationOnAcceptance = functions.database.ref('/ClientOrders/{Orderid}').onUpdate(async (change, context) =>{
+    const newData = change.after.val();
+    var message = {
+        notification:{
+            title: newData.acceptance+"",
+            body: ""
+        },
+        token: newData.user_token,
+    };
+    return admin.messaging().send(message);
+});
