@@ -1,0 +1,68 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+
+namespace Mansour.Business_Layer
+{
+    public class GetPost
+    {
+        public List<T> GetSPItems<T>(string spName, Func<IDataReader, T> Mapper, params object[] Qparameter)
+        {
+            List<T> list = new List<T>();
+            string ConStr = "Data Source=DESKTOP-S479GV3;Initial Catalog= Mansour;Integrated Security=True";
+            SqlConnection con = new SqlConnection(ConStr);
+            con.Open();
+            SqlCommand cmd = new SqlCommand(spName, con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            SqlCommandBuilder.DeriveParameters(cmd);
+            var counter = 0;
+            for (var i = 0; i < cmd.Parameters.Count; i++)
+            {
+                var parameter = cmd.Parameters[i];
+                if (parameter.Direction == ParameterDirection.Input)
+                {
+                    var parameterValue = Qparameter[counter];
+                    cmd.Parameters[i].Value = parameterValue != null ? parameterValue : DBNull.Value;
+                    counter++;
+                }
+            }
+
+            using (IDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(Mapper(reader));
+                }
+            }
+            con.Close();
+            return list;
+        }
+
+        public void PostSpItems(String spName1, params object[] Qparameter)
+        {
+            string ConStr = "Data Source=DESKTOP-S479GV3;Initial Catalog= Mansour;Integrated Security=True";
+            SqlConnection con = new SqlConnection(ConStr);
+            con.Open();
+            SqlCommand cmd = new SqlCommand(spName1, con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            SqlCommandBuilder.DeriveParameters(cmd);
+            var counter = 0;
+            for (var i = 0; i < cmd.Parameters.Count; i++)
+            {
+                var parameter = cmd.Parameters[i];
+                if (parameter.Direction == ParameterDirection.Input)
+                {
+                    var parameterValue = Qparameter[counter];
+                    cmd.Parameters[i].Value = parameterValue != null ? parameterValue : DBNull.Value;
+                    counter++;
+                }
+            }
+
+            cmd.ExecuteNonQuery();
+            con.Close();
+        }
+    }
+}
