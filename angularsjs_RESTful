@@ -1,0 +1,161 @@
+
+var app = angular.module("myApp", []);
+app.controller("myController", function ($scope, $http) {
+
+
+    var numOfRowsDisplayed = 5;
+    var numOfPage = 1;
+
+    $scope.pagenum = function (num) {
+        numOfPage = num + 1;
+        $scope.search();
+    };
+
+    $scope.numOfRows = function () {
+        numOfRowsDisplayed = $scope.numofRows;
+        $scope.search();
+    };
+
+    $scope.search = function () {
+        $scope.num_page = [];
+        var resultsize = 0;
+        var tempName = $scope.nameClientSearch;
+        console.log(tempName);
+        $scope.ind = 1;
+        if ($scope.nameClientSearch == undefined)
+            tempName = "";
+        $http({
+            method: 'GET',
+            url: 'https://localhost:44322/Client/getListSize?filterName=' + tempName.toLowerCase()
+
+        })
+            .then(function (response) {
+                console.log(response);
+                resultsize = response.data;
+                for (var i = 1; i <= Math.ceil(resultsize / numOfRowsDisplayed); i++) {
+                    $scope.num_page.push(i);
+                }
+                //console.log(num_page+"pagination array");
+                var from = ((numOfPage - 1) * numOfRowsDisplayed) + 1;
+
+                var to = numOfPage * numOfRowsDisplayed;
+
+                $http({
+                    method: 'GET',
+                    url: 'https://localhost:44322/Client/GetClients?Newname=' + tempName.toLowerCase() + '&from=' + from + '&to=' + to
+
+
+                })
+                    .then(function (response) {
+                        console.log(response);
+                        $scope.clientsArray = response.data;
+
+                    });
+            });
+
+
+    };
+    $scope.search();
+
+    $scope.addRow = function () {
+        // if ($scope.namestudent == undefined && $scope.mothername == undefined && $scope.date == undefined && $scope.sex == undefined && $scope.StudentNationality == undefined && $scope.grade == undefined && $scope.StudentResult == undefined && $scope.StudentStatus == undefined && $scope.Studentschooltype == undefined && $scope.StudentAccept == undefined && $scope.StudentAbsence == undefined && $scope.StudentNotes == undefined)
+        //  return;
+        var tempAdd = { ClientName: $scope.nameclient, ClientGender: $scope.genderclient, ClientAddress: $scope.addressclient, ClientPhone: $scope.phoneclient, ClientDate: $scope.dateclient };
+        $http({
+            method: 'POST',
+            url: 'https://localhost:44322/Client/AddClient',
+            data: tempAdd
+
+        })
+            .then(function (response) {
+                console.log(response);
+                $scope.clientsArray = response.data;
+                $scope.search(1);
+            });
+    };
+
+    $scope.RetrieveID = function (indx) {
+        $scope.currentID = $scope.clientsArray[indx].ID;
+
+        var prod = {
+            ID: $scope.currentID
+        }
+        console.log(prod);
+        $http({
+            method: 'POST',
+            url: 'https://localhost:44322/Client/GetAllIDs',
+            data: prod
+
+        })
+            .then(function (response) {
+
+                var viewData = response.data;
+                console.log(viewData);
+
+                $scope.nameclient = viewData[0].ClientName;
+                $scope.genderclient = viewData[0].ClientGender;
+                $scope.addressclient = viewData[0].ClientAddress;
+                $scope.phoneclient = viewData[0].ClientPhone;
+                $scope.dateclient = viewData[0].ClientDate;
+            });
+    };
+
+    $scope.edit = function () {
+        $scope.clientsArray[indx2].ClientName = $scope.nameclient;
+        var editedName = $scope.clientsArray[indx2].ClientName;
+
+        $scope.clientsArray[indx2].ClientGender = $scope.genderclient;
+        var editedGender = $scope.clientsArray[indx2].ClientGender;
+
+        $scope.clientsArray[indx2].ClientAddress = $scope.addressclient;
+        var editedAddress = $scope.clientsArray[indx2].ClientAddress;
+
+        $scope.clientsArray[indx2].ClientPhone = $scope.phoneclient;
+        var editedPhone = $scope.clientsArray[indx2].ClientPhone;
+
+        $scope.clientsArray[indx2].ClientDate = $scope.dateclient;
+        var editedDate = $scope.clientsArray[indx2].ClientDate;
+
+        var editedID = $scope.clientsArray[indx2].ID;
+        console.log(editedID);
+        var tempAdd = { ID: editedID, ClientName: editedName, ClientGender: editedGender, ClientAddress: editedAddress, ClientPhone: editedPhone, ClientDate: editedDate };
+
+        $http({
+            method: 'POST',
+            url: 'https://localhost:44322/Client/EditClient',
+            data: tempAdd
+
+        })
+        $scope.search();
+    };
+
+    var indx2 = -2;
+    $scope.onsubmit = function (indx) {
+        if (indx == -1) {
+            $scope.nameclient = undefined;
+            $scope.genderclient = undefined;
+            $scope.addressclient = undefined;
+            $scope.phoneclient = undefined;
+            $scope.dateclient = undefined;
+
+            $scope.addbln = true;
+
+        }
+        else {
+            $scope.addbln = false;
+            //$scope.name1 = $scope.movieArray[indx].name;
+            indx2 = indx;
+            $scope.RetrieveID(indx);
+        }
+    };
+
+    $scope.add_edit = function () {
+        if ($scope.addbln) {
+            $scope.addRow();
+        }
+        else
+            $scope.edit();
+
+    };
+
+});
