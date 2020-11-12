@@ -1,0 +1,157 @@
+import React from 'react';
+import '../LoginPage/LoginForm.css';
+import firebase from '../config';
+class LoginForm extends React.Component{
+    constructor(props){
+        super(props);
+        this.state = {
+            username: '',
+            password: '',
+            loggedIn : false,
+            brand:'',
+            size:'',
+            price:'',
+        };
+        this.handleUsername = this.handleUsername.bind(this);
+        this.handlePassword = this.handlePassword.bind(this);
+        this.user_login = this.user_login.bind(this);
+        this.user_logout = this.user_logout.bind(this);
+        this.handleBrand = this.handleBrand.bind(this);
+        this.handleSize = this.handleSize.bind(this);
+        this.handlePrice = this.handlePrice.bind(this);
+        this.update_tire_info = this.update_tire_info.bind(this);
+    }
+    handleUsername(e){
+        this.setState({username: e.target.value});
+        console.log(this.state.username);
+    }
+    handlePassword(e){
+        this.setState({password: e.target.value});
+        console.log(this.state.password);
+    }
+    handleBrand(e){
+        this.setState({brand: e.target.value});
+        console.log(this.state.brand);
+    }
+    handleSize(e){
+        this.setState({size: e.target.value});
+    }
+    handlePrice(e){
+        this.setState({price: e.target.value})
+    }
+    user_login(){
+        let successful = false;
+        var Dataref = firebase.database().ref("/ServiceLocation");
+        Dataref.on('value',(snapshot) => {
+                snapshot.forEach(data => {
+                var data_read = data.val();
+                if((this.state.username === data_read.email) && (this.state.password === data_read.password)){
+                    successful = true;
+                    this.setState({loggedIn: true});
+                }
+            });
+        });
+    }
+    user_logout(){
+        this.setState({
+            loggedIn:false
+        });
+    }
+    update_tire_info(){
+       var ref = firebase.firestore().collection("testing");
+       ref.get().then((snapshot) => {
+            snapshot.forEach(data => {
+                var data_val = data.data();
+                if(this.state.brand === data_val.Brand && this.state.size === data_val.Size ){
+                    ref.doc(data.id).update({
+                       Price: Number.parseInt(this.state.price, 10)
+                    });
+                }
+            });
+        });
+    }  
+render() {
+if(this.state.loggedIn){
+    return(
+        <div id="container1" className="container">
+        <div className="d-flex justify-content-center h-100">
+            <div id="card1" className="card">
+                <div className="card-header">
+                    <h1>UPDATE DATA</h1>
+                <div className="form-group">
+                    <input type="submit" value="Log out" onClick={this.user_logout} className="btn float-right login_btn"/>
+                </div>
+                </div>
+                <div className="card-body">
+                    <form>
+                        <div id="input1" className="input-group form-group">
+                            <div className="input-group-prepend">
+                                <span className="input-group-text"><i className="fas fa-copyright"></i></span>
+                            </div>
+                            <input type="text" className="form-control" placeholder="Tire Brand" onChange={this.handleBrand} value={this.state.brand}/>
+                        </div>
+                        <div id="input2" className="input-group form-group">
+                            <div className="input-group-prepend">
+                                <span className="input-group-text"><i className="fas fa-text-width"></i></span>
+                            </div>
+                            <input type="text" className="form-control" placeholder="Tire Size" onChange={this.handleSize} value={this.state.size}/>
+                        </div>
+                        <div id="input3" className="input-group form-group">
+                            <div className="input-group-prepend">
+                                <span className="input-group-text"><i className="fas fa-money-check-alt"></i></span>
+                            </div>
+                            <input type="text" className="form-control" placeholder="Tire Price" onChange={this.handlePrice} value={this.state.price}/>
+                        </div>
+                    </form>
+                </div>
+                <div className="card-footer">
+                <div className="text-right"> 
+               
+                <div className="form-group">
+                            <input type="submit" id="button1" value="Update TIRE PRICE" onClick={this.update_tire_info} className="btn float-right login_btn"/>
+                </div>
+                
+               
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+}
+else{
+    return(
+        <div className="container">
+            <div className="d-flex justify-content-center h-100">
+                <div className="card">
+                    <div className="card-body">
+                        <form>
+                            <div className="input-group form-group">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text"><i className="fas fa-user"></i></span>
+                                </div>
+                                <input type="text" className="form-control" placeholder="Email" onChange={this.handleUsername} value={this.state.username}/>
+                            </div>
+                            <div className="input-group form-group">
+                                <div className="input-group-prepend">
+                                    <span className="input-group-text"><i className="fas fa-key"></i></span>
+                                </div>
+                                <input type="password" autoComplete="on" className="form-control" placeholder="Password" onChange={this.handlePassword} value={this.state.password}/>
+                            </div>
+                            <div className="form-group">
+                                <input type="button" value="Login" onClick={this.user_login} className="btn float-right login_btn"/>
+                            </div>
+                        </form>
+                    </div>
+                    <div className="card-footer">
+                     
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+}
+
+}
+export default LoginForm;
